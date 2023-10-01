@@ -2,6 +2,7 @@ package com.example.todo.config;
 
 import com.example.todo.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,6 +15,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
@@ -22,24 +24,30 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
-    private final UserService userService;
+    private UserService userService;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-        http
-                .authorizeRequests()
-                .dispatcherTypeMatchers(HttpMethod.valueOf("/home")).authenticated()
-                .dispatcherTypeMatchers(HttpMethod.valueOf("/info")).authenticated()
-                .dispatcherTypeMatchers(HttpMethod.valueOf("/admin")).hasRole("ADMIN")
-                .dispatcherTypeMatchers(HttpMethod.valueOf("/main")).hasRole("GUEST")
-                .anyRequest().permitAll();
-//                .and()
-//                .exceptionHandling()
-//                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
-                //.and().addFilter()
-        return http.build();
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers("/", "/main", "/registration").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin((form) -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/home")
+                        .permitAll()
+                )
+                .logout((logout) -> logout.permitAll());
+
+
+        return http.build();
+    }
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider(){
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
@@ -48,8 +56,8 @@ public class SecurityConfig {
         return daoAuthenticationProvider;
     }
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder(){
+    @Bean(name = "passwordEncoder")
+    public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
