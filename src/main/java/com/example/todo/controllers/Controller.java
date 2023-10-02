@@ -14,7 +14,6 @@ import java.security.Principal;
 @org.springframework.stereotype.Controller
 public class Controller {
 
-    private final UserService userService;
     @GetMapping("/main")
     public String main(){
         return "main";
