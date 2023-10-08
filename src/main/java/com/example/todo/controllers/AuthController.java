@@ -1,8 +1,10 @@
 package com.example.todo.controllers;
 
 
+import com.example.todo.dto.LoginUserDto;
 import com.example.todo.dto.UserDto;
 import com.example.todo.models.User;
+import com.example.todo.service.UserDetailsService;
 import com.example.todo.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,18 +25,35 @@ public class AuthController {
 
     private UserService userService;
 
+    private UserDetailsService userDetailsService;
+
     public AuthController(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping("index")
-    public String home(){
-        return "index";
+    @GetMapping("login")
+    public String loginForm(Model model) {
+        LoginUserDto loginUserDto = new LoginUserDto();
+        model.addAttribute("loginUserDto", loginUserDto);
+        return "login";
     }
 
-    @GetMapping("/login")
-    public String loginForm() {
-        return "login";
+    @PostMapping("/login")
+    public String login(@ModelAttribute("loginUserDto") LoginUserDto loginUserDto,
+    RedirectAttributes redirectAttributes) {
+        String email = loginUserDto.getEmail();
+        String password = loginUserDto.getPassword();
+
+        if (userDetailsService.authenticateByEmail(email, password)) {
+            // Успешная авторизация
+            redirectAttributes.addFlashAttribute("message", "Login successful");
+            return "redirect:/home";
+        } else {
+            // Неправильный Email или пароль
+            redirectAttributes.addFlashAttribute("error", "Invalid Email and Password");
+            return "redirect:/login";
+        }
+
     }
 
     // handler method to handle user registration request

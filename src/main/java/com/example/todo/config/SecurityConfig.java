@@ -46,9 +46,8 @@ public class SecurityConfig {
                 .formLogin((form) -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/users")
+                        .defaultSuccessUrl("/home")
                         .permitAll()
-                        .successHandler(appAuthenticationSuccessHandler())
                 )
                 .logout((logout) -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
@@ -77,10 +76,6 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public AuthenticationSuccessHandler appAuthenticationSuccessHandler(){
-        return new AppAuthenticationSuccessHandler();
-    }
 
 
 }
